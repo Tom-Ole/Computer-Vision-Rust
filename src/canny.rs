@@ -24,7 +24,6 @@ pub fn canny(body: &Vec<u8>, gausian_strength: &f32, threshold: &f32) -> Vec<u8>
     return image_bytes;
 }
 
-// edge detection operator
 fn sobel_operator(image: &DynamicImage) -> (DynamicImage, DynamicImage) {
     let width = image.width() as i32;
     let height = image.height() as i32;

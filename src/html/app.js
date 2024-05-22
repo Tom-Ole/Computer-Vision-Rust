@@ -22,14 +22,6 @@ image_input.addEventListener("change", async () => {
 
         let data = await fetchImage(file, selectedAlgo, sigma, threshold)
 
-        // let res = await fetch("/loadImage", {
-        //     method: "POST",
-        //     headers: {
-        //         "Content-length": file.length
-        //     },
-        //     body: file
-        // });
-
         if(data.data && data.data.base64) {
             img2.src = `data:image/png;base64,${data.data.base64}`;
         }
@@ -43,13 +35,15 @@ async function fetchImage(image, algo, sigma, threshold) {
     switch(algo) {
         case "canny": 
             return canny(image, sigma, threshold)
+        case "sobel":
+            return sobel(image, sigma);
         default: 
             return null;
     }
 
 }
 
-async function canny(image, sigma, threshold) {
+async function setSigma(sigma) {
     let r1 = await fetch("/setSigma", {
         method: "POST",
         headers: {
@@ -57,17 +51,42 @@ async function canny(image, sigma, threshold) {
         },
         body: sigma.toString()
     });
-    let r2 = await fetch("/setThreshold", {
+    return r1;
+} 
+
+async function setThreshold(threshold) {
+    let r1 = await fetch("/setThreshold", {
         method: "POST",
         headers: {
             "Content-length": threshold.toString().length
         },
         body: threshold.toString()
     });
+    return r1
+}
+
+async function sobel(image, sigma) {
+    let r1 = await setSigma(sigma)
+    if(r1.ok) {
+        let res = await fetch("/canny", {
+            method: "POST",
+            headers: {
+                "Content-length": image.length
+            },
+            body: image
+        });
+        return await res.json()
+    } else {
+        return null
+    }
+}
+
+async function canny(image, sigma, threshold) {
+    let r1 = await setSigma(sigma)
+    let r2 = await setThreshold(threshold)
 
     if(r1.ok && r2.ok) {
-
-        let res = await fetch("/loadImage", {
+        let res = await fetch("/canny", {
             method: "POST",
             headers: {
                 "Content-length": image.length
@@ -80,21 +99,3 @@ async function canny(image, sigma, threshold) {
         return null
     }
 }
-    
-function toBytes(number) {
-    if (!Number.isSafeInteger(number)) {
-      throw new Error("Number is out of range");
-    }
-  
-    const size = number === 0 ? 0 : byteLength(number);
-    const bytes = new Uint8ClampedArray(size);
-    let x = number;
-    for (let i = (size - 1); i >= 0; i--) {
-      const rightByte = x & 0xff;
-      bytes[i] = rightByte;
-      x = Math.floor(x / 0x100);
-    }
-  
-    return bytes.buffer;
-  }
-  

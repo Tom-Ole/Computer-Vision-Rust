@@ -1,5 +1,6 @@
 mod gausian_blur;
 mod canny;
+mod sobel;
 
 use std::{
     str, fs, io::{BufRead, BufReader, Read, Write}, net::{TcpListener, TcpStream}, time::Instant
@@ -8,6 +9,8 @@ use std::{
 use base64::{engine::general_purpose::STANDARD, Engine};
 use canny::canny;
 use serde_json::{json, Value};
+
+use crate::sobel::sobel;
 
 struct InputValues {
     sigma: f32,
@@ -93,14 +96,24 @@ fn handle_connection(mut stream: TcpStream, values: &mut InputValues) {
             
             response_200("Ok".to_string())
         }
-        "POST /loadImage HTTP/1.1" => {
-            println!("Start Processing");
+        "POST /canny HTTP/1.1" => {
+            println!("Start Processing canny");
             let now = Instant::now();
                 let new_image = canny(&body, &values.sigma, &values.threshold);
             println!("Elapsed time: {:.2?}", now.elapsed());
                 response_json(json!({
                     "data": {
-                        "bytes": new_image.clone(),
+                        "base64": STANDARD.encode(&new_image)
+                    }
+                }))
+        }
+        "POST /sobel HTTP/1.1" => {
+            println!("Start Processing sobel");
+            let now = Instant::now();
+                let new_image = sobel(&body, &values.sigma);
+            println!("Elapsed time: {:.2?}", now.elapsed());
+                response_json(json!({
+                    "data": {
                         "base64": STANDARD.encode(&new_image)
                     }
                 }))
