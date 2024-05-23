@@ -7,18 +7,17 @@ let imageContainer = document.querySelector("#img-container")
 let id = 1000
 function createImage(base64, label="") {
 
-    const currentDate = new Date();
-    const timestamp = currentDate.getTime();
+    let d = new Date();
+    let time = d.toLocaleTimeString();
     
     let imageLabel = document.createElement("label")
     imageLabel.for = id
     id++
-    const text = label + " (" + timestamp.toString() + ")" 
-    imageLabel.innerHTML = text
+    imageLabel.innerHTML = label + " (" + time + "): "
 
     let img = document.createElement("img")
     img.src = `data:image/png;base64,${base64}`
-    imageContainer.append(label)
+    imageContainer.append(imageLabel)
     imageContainer.append(img)
     return true;
 }
@@ -34,6 +33,13 @@ image_input.addEventListener("change", async () => {
             originalImage.src = evt.target.result
         }
         reader.readAsDataURL(file)
+
+        let imageLabel = document.createElement("label")
+        imageLabel.for = id
+        id++
+        let copy_current = document.querySelector("#original").cloneNode(true);
+        copy_current.id = id
+        imageContainer.append(copy_current);
         
         let selectedAlgo = document.querySelector("#algo").value
 
@@ -55,11 +61,16 @@ async function fetchImage(image, algo, sigma, threshold) {
         case "sobel":
             let data2 = await sobel(image, sigma);
             return createImage(data2.data.base64, algo)
+        case "harris":
+            let data3 = await harris(image);
+            return createImage(data3.data.base64, algo)
         case "all":
             let img1 = await canny(image, sigma, threshold)
             createImage(img1.data.base64, "Canny")
             let img2 = await sobel(image, sigma)
             createImage(img2.data.base64, "Sobel")
+            let img3 = await harris(image, sigma)
+            createImage(img3.data.base64, "Harris")
             return true
         default: 
             return null;
@@ -122,4 +133,16 @@ async function canny(image, sigma, threshold) {
     } else {
         return null
     }
+}
+
+async function harris(image) {
+    let res = await fetch("/harris", {
+        method: "POST",
+        headers: {
+            "Content-length": image.length
+        },
+        body: image
+    })
+
+    return await res.json();
 }

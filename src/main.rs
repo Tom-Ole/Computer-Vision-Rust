@@ -1,6 +1,14 @@
+
+/*
+################################################################################
+# Reference: https://en.wikipedia.org/wiki/Feature_(computer_vision)#Detectors #
+################################################################################
+*/
+
 mod gausian_blur;
 mod canny;
 mod sobel;
+mod harris;
 
 use std::{
     str, fs, io::{BufRead, BufReader, Read, Write}, net::{TcpListener, TcpStream}, time::Instant
@@ -10,7 +18,7 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use canny::canny;
 use serde_json::{json, Value};
 
-use crate::sobel::sobel;
+use crate::{harris::harris, sobel::sobel};
 
 struct InputValues {
     sigma: f32,
@@ -79,10 +87,9 @@ fn handle_connection(mut stream: TcpStream, values: &mut InputValues) {
             let contents = fs::read_to_string("src/html/app.js").unwrap();
             response_200(contents)
         }
-        "GET /test HTTP/1.1" => {
-            response_json(json!({
-                "data": ["test", 12, {"a": "hello", "b": "world"}]
-            }))
+        "GET /style.css HTTP/1.1" => {
+            let contents = fs::read_to_string("src/html/style.css").unwrap();
+            response_200(contents)
         }
         "POST /setSigma HTTP/1.1" => {
             let t = str::from_utf8(&body).unwrap().parse::<f32>().unwrap(); 
@@ -111,6 +118,17 @@ fn handle_connection(mut stream: TcpStream, values: &mut InputValues) {
             println!("Start Processing sobel");
             let now = Instant::now();
                 let new_image = sobel(&body, &values.sigma);
+            println!("Elapsed time: {:.2?}", now.elapsed());
+                response_json(json!({
+                    "data": {
+                        "base64": STANDARD.encode(&new_image)
+                    }
+                }))
+        }
+        "POST /harris HTTP/1.1" => {
+            println!("Start Processing Harris");
+            let now = Instant::now();
+                let new_image = harris(&body);
             println!("Elapsed time: {:.2?}", now.elapsed());
                 response_json(json!({
                     "data": {

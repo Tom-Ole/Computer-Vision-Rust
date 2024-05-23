@@ -1,0 +1,15 @@
+* {
+    box-sizing: border-box;
+}
+label, h1 {
+    color: white;
+}
+
+#img-container label {
+    display: block;
+    width: 100%;
+}
+
+#img-contaienr {
+    color: white;
+}
