@@ -1,7 +1,27 @@
 let image_input = document.querySelector("#img-input");
 
-let img1 = document.querySelector("#img1")
-let img2 = document.querySelector("#img2")
+let originalImage = document.querySelector("#original")
+let imageContainer = document.querySelector("#img-container")
+
+
+let id = 1000
+function createImage(base64, label="") {
+
+    const currentDate = new Date();
+    const timestamp = currentDate.getTime();
+    
+    let imageLabel = document.createElement("label")
+    imageLabel.for = id
+    id++
+    const text = label + " (" + timestamp.toString() + ")" 
+    imageLabel.innerHTML = text
+
+    let img = document.createElement("img")
+    img.src = `data:image/png;base64,${base64}`
+    imageContainer.append(label)
+    imageContainer.append(img)
+    return true;
+}
 
 image_input.addEventListener("change", async () => {
     if(image_input.files.length > 0) {
@@ -11,7 +31,7 @@ image_input.addEventListener("change", async () => {
 
         let reader = new FileReader();
         reader.onload = (evt) => {
-            img1.src = evt.target.result
+            originalImage.src = evt.target.result
         }
         reader.readAsDataURL(file)
         
@@ -20,11 +40,7 @@ image_input.addEventListener("change", async () => {
         let sigma = document.querySelector("#sigma").value;
         let threshold = document.querySelector("#threshold").value;
 
-        let data = await fetchImage(file, selectedAlgo, sigma, threshold)
-
-        if(data.data && data.data.base64) {
-            img2.src = `data:image/png;base64,${data.data.base64}`;
-        }
+        fetchImage(file, selectedAlgo, sigma, threshold)
 
     }
 })
@@ -34,9 +50,17 @@ async function fetchImage(image, algo, sigma, threshold) {
 
     switch(algo) {
         case "canny": 
-            return canny(image, sigma, threshold)
+            let data1 = await canny(image, sigma, threshold)
+            return createImage(data1.data.base64, algo)
         case "sobel":
-            return sobel(image, sigma);
+            let data2 = await sobel(image, sigma);
+            return createImage(data2.data.base64, algo)
+        case "all":
+            let img1 = await canny(image, sigma, threshold)
+            createImage(img1.data.base64, "Canny")
+            let img2 = await sobel(image, sigma)
+            createImage(img2.data.base64, "Sobel")
+            return true
         default: 
             return null;
     }
@@ -68,7 +92,7 @@ async function setThreshold(threshold) {
 async function sobel(image, sigma) {
     let r1 = await setSigma(sigma)
     if(r1.ok) {
-        let res = await fetch("/canny", {
+        let res = await fetch("/sobel", {
             method: "POST",
             headers: {
                 "Content-length": image.length

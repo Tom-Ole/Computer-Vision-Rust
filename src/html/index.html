@@ -10,7 +10,8 @@
     <div>
         <label for="algo">Algorithm: </label>
         <select id="algo">
-            <option value="canny" selected>Canny</option>
+            <option value="all" selected>All</option>
+            <option value="canny">Canny</option>
             <option value="sobel">Sobel</option>
             <option value="harris">Harris & Stephnes / Plessey</option>
         </select>
@@ -21,8 +22,11 @@
     </div>
     <br>
     <input type="file" id="img-input" accept="image/png"/>
-    <img id="img1" width="400"/>
-    <img id="img2" width="400"/>
+    <div id="img-container">
+        <label for="original">original: </label>
+        <img id="original" />
+
+    </div>
     <script src="/app.js"></script>
 
     <style>
