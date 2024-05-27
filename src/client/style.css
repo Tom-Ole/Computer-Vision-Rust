@@ -5,11 +5,11 @@ label, h1 {
     color: white;
 }
 
-#img-container label {
+#img-container label, #original-label {
     display: block;
     width: 100%;
-}
-
-#img-contaienr {
     color: white;
+}
+img {
+    width: 600px;
 }
