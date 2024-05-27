@@ -6,7 +6,7 @@ pub fn harris(body: &Vec<u8>) -> Vec<u8> {
     let img = ImageReader::new(Cursor::new(body)).with_guessed_format().unwrap().decode().unwrap();
     
     let gray_scale_img = grayscale(&img);
-    let corner_img = harris_corner_detection(&gray_scale_img);
+    let corner_img = harris_edge_corner_detection(&gray_scale_img);
 
     let mut image_bytes = Vec::new();
     corner_img.write_to(&mut Cursor::new(&mut image_bytes), image::ImageFormat::Png).unwrap(); 
@@ -30,7 +30,7 @@ fn det(m: &Vec<Vec<f64>>) -> f64 {
 }
 
 
-fn harris_corner_detection(image: &ImageBuffer<Luma<u8>, Vec<u8>>) -> DynamicImage {
+fn harris_edge_corner_detection(image: &ImageBuffer<Luma<u8>, Vec<u8>>) -> DynamicImage {
 
     let width = image.width();
     let height = image.height();
@@ -87,6 +87,7 @@ fn harris_corner_detection(image: &ImageBuffer<Luma<u8>, Vec<u8>>) -> DynamicIma
     }
 
     res_image.invert();
+    res_image.brighten(10);
 
     return res_image;   
 }

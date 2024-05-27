@@ -8,6 +8,7 @@ mod canny;
 mod gausian_blur;
 mod harris;
 mod sobel;
+mod shi;
 
 use std::{
     fs,
@@ -22,6 +23,7 @@ use std::{
 use base64::{engine::general_purpose::STANDARD, Engine};
 use canny::canny;
 use serde_json::{json, Value};
+use shi::shi;
 
 use crate::{harris::harris, sobel::sobel};
 #[derive(Clone)]
@@ -86,6 +88,7 @@ fn handle_connection(mut stream: TcpStream, values: &mut InputValues) {
     let (canny_tx, canny_rx) = mpsc::channel();
     let (sobel_tx, sobel_rx) = mpsc::channel();
     let (harris_tx, harris_rx) = mpsc::channel();
+    let (shi_tx, shi_rx) = mpsc::channel();
 
     let response = match request_line.as_str() {
         "GET / HTTP/1.1" => {
@@ -145,7 +148,19 @@ fn handle_connection(mut stream: TcpStream, values: &mut InputValues) {
                 }
             }))
         }
+        "POST /shi HTTP/1.1" => {
+            println!("Start Processing Shi");
+            let now = Instant::now();
+            let new_image = shi(&body, values.threshold);
+            println!("Elapsed time: {:.2?}", now.elapsed());
+            response_json(json!({
+                "data": {
+                    "base64": STANDARD.encode(&new_image)
+                }
+            }))
+        }
         "POST /all HTTP/1.1" => {
+
             let body_mut = Arc::new(Mutex::new(body));
             println!("Start Processing All");
             let now = Instant::now();
@@ -159,29 +174,39 @@ fn handle_connection(mut stream: TcpStream, values: &mut InputValues) {
                 );
                 canny_tx.send(canny_image).unwrap();
             });
-
+            
             let body_clone_2 = Arc::clone(&body_mut);
             let values_clone_2 = values.clone();
             let thread_2 = thread::spawn(move || {
                 let sobel_image = sobel(&body_clone_2.lock().unwrap(), &values_clone_2.sigma);
                 sobel_tx.send(sobel_image).unwrap();
             });
-
+            
             let body_clone_3 = Arc::clone(&body_mut);
             let thread_3 = thread::spawn(move || {
                 let harris_image = harris(&body_clone_3.lock().unwrap());
                 harris_tx.send(harris_image).unwrap();
             });
+            
+            let body_clone_4 = Arc::clone(&body_mut);
+            let values_clone_4 = values.clone();
+            let thread_4 = thread::spawn(move || {
+                let shi_image = shi(&body_clone_4.lock().unwrap(), values_clone_4.threshold);
+                shi_tx.send(shi_image).unwrap();
+            });
+
             thread_1.join().unwrap();
             thread_2.join().unwrap();
             thread_3.join().unwrap();
+            thread_4.join().unwrap();
 
             println!("Elapsed time: {:.2?}", now.elapsed());
             response_json(json!({
                 "data": {
                     "canny": STANDARD.encode(&canny_rx.recv().unwrap()),
                     "sobel": STANDARD.encode(&sobel_rx.recv().unwrap()),
-                    "harris": STANDARD.encode(&harris_rx.recv().unwrap())
+                    "harris": STANDARD.encode(&harris_rx.recv().unwrap()),
+                    "shi": STANDARD.encode(&shi_rx.recv().unwrap())
                 }
             }))
         }

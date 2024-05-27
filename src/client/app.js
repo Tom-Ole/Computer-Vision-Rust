@@ -27,7 +27,6 @@ image_input.addEventListener("change", async () => {
 
         let imageBox = document.createElement("div")
 
-
         let file = image_input.files[0]
         let imageData = new FormData()
         imageData.append("file", file);
@@ -75,11 +74,15 @@ async function fetchImage(image, algo, sigma, threshold, container) {
         case "harris":
             let data3 = await harris(image);
             return createImage(data3.data.base64, algo, container)
+        case "shi":
+            let data4 = await shi(image, threshold);
+            return createImage(data4.data.base64, algo, container)
         case "all":
             let data = await all(image, sigma, threshold)
             createImage(data.data.canny, "Canny", container)
             createImage(data.data.sobel, "Sobel", container)
             createImage(data.data.harris, "Harris", container)
+            createImage(data.data.shi, "Shi", container)
             return true
         default: 
             return null;
@@ -154,6 +157,23 @@ async function harris(image) {
     })
 
     return await res.json();
+}
+
+async function shi(image, threshold) {
+    let res1 = await setThreshold(threshold)
+    if(res1.ok) {
+        let res = await fetch("/shi", {
+            method: "POST",
+            headers: {
+                "Content-length": image.length
+            },
+            body: image
+        })
+        return await res.json();
+    } else {
+        return null;
+    }
+
 }
 
 async function all(image, sigma, threshold) {
