@@ -11,13 +11,7 @@ mod sobel;
 mod shi;
 
 use std::{
-    fs,
-    io::{BufRead, BufReader, Read, Write},
-    net::{TcpListener, TcpStream},
-    str,
-    sync::{mpsc, Arc, Mutex},
-    thread,
-    time::Instant,
+    env, fs, io::{BufRead, BufReader, Read, Write}, net::{TcpListener, TcpStream}, str, sync::{mpsc, Arc, Mutex}, thread, time::Instant
 };
 
 use base64::{engine::general_purpose::STANDARD, Engine};
@@ -33,13 +27,23 @@ struct InputValues {
 }
 
 fn main() {
+
+    let args: Vec<String> = env::args().collect();
+    let mut port = String::from("8080");
+
+    for i in 0..args.len() {
+        if args[i] == "--port" && i + 1 < args.len() {
+            port = args[i+1].clone();
+            break;
+        }
+    }
+
     let mut values = InputValues {
         sigma: 1.0,
         threshold: 0.3,
     };
 
-    const PORT: usize = 8080;
-    let listener = TcpListener::bind(format!("127.0.0.1:{}", PORT)).unwrap();
+    let listener = TcpListener::bind(format!("127.0.0.1:{}", port)).unwrap();
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
