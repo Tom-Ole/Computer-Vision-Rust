@@ -32,7 +32,7 @@ fn main() {
     let mut port = String::from("8080");
 
     for i in 0..args.len() {
-        if args[i] == "--port" && i + 1 < args.len() {
+        if args[i] == "port" && i + 1 < args.len() {
             port = args[i+1].clone();
             break;
         }
@@ -44,6 +44,7 @@ fn main() {
     };
 
     let listener = TcpListener::bind(format!("127.0.0.1:{}", port)).unwrap();
+    println!("Server running on 127.0.0.1:{}", port);
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();

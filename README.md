@@ -29,7 +29,7 @@ This is a simple HTTP server written in Rust that focuses on computer vision. It
 3. Run the server:
 
      ```bash
-     cargo run [--port 8080]
+     cargo run [-- port 8080]
      ```
 
 ## Usage
