@@ -26,14 +26,14 @@ struct InputValues {
     threshold: f32,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct results {
     canny: String,
     sobel: String,
     harris: String,
     shi: String,
 }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct computerVison {
     image: Vec<u8>,
     sigma: f32,
@@ -62,6 +62,7 @@ impl computerVison {
     }
     fn shi(mut self) -> String {
         let res = shi(&self.image, &self.threshold);
+        println!("{}",self.threshold);
         let encode = STANDARD.encode(&res); 
         self.results.shi = encode.clone();
         return encode;    
@@ -99,11 +100,11 @@ fn main() {
     for stream in listener.incoming() {
         let stream = stream.unwrap();
 
-        handle_connection(stream, cV.clone());
+        handle_connection(stream, &cV);
     }
 }
 
-fn handle_connection(mut stream: TcpStream, mut cV: computerVison) {
+fn handle_connection(mut stream: TcpStream, cV: &computerVison) {
     let mut buf_reader = BufReader::new(&mut stream);
     let mut request_line = "".to_string();
     buf_reader.read_line(&mut request_line).unwrap();
