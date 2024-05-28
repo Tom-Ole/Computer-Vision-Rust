@@ -31,7 +31,7 @@ This is a simple HTTP server written in Rust that focuses on computer vision. It
      ```bash
      cargo run [-- port 8080]
      ```
-
+gi
 ## Usage
 
 Once the server is running, you can access it using a web browser or a web client.
