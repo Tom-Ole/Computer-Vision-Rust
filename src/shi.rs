@@ -2,12 +2,12 @@ use std::io::Cursor;
 
 use image::{imageops::grayscale, io::Reader as ImageReader, DynamicImage, GenericImage, ImageBuffer, Luma, Rgba};
 
-pub fn shi(body: &Vec<u8>, threshold: f32) -> Vec<u8> {
+pub fn shi(body: &Vec<u8>, threshold: &f32) -> Vec<u8> {
 
     let img = ImageReader::new(Cursor::new(body)).with_guessed_format().unwrap().decode().unwrap();
 
     let gray_scale_img = grayscale(&img);
-    let corner_img = shi_corner_detection(&gray_scale_img, threshold as f64);
+    let corner_img = shi_corner_detection(&gray_scale_img, *threshold as f64);
 
     let mut image_bytes = Vec::new();
     corner_img.write_to(&mut Cursor::new(&mut image_bytes), image::ImageFormat::Png).unwrap(); 
